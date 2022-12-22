@@ -9,6 +9,48 @@ from pathlib import Path
 from hachoir.parser import createParser
 from hachoir.metadata import extractMetadata
 
+import subprocess
+import os
+import json
+from datetime import datetime
+from dateutil.parser import parse
+
+class ExifTool(object):
+
+    sentinel = "{ready}\r\n"
+
+    def __init__(self, executable=r"exiftool.exe"):
+        self.executable = executable
+
+    def __enter__(self):
+        self.process = subprocess.Popen(
+            [self.executable, "-stay_open", "True",  "-@", "-"],
+            stdin=subprocess.PIPE, stdout=subprocess.PIPE)
+        return self
+
+    def  __exit__(self, exc_type, exc_value, traceback):
+        self.process.stdin.write("-stay_open\nFalse\n")
+        self.process.stdin.flush()
+
+    def execute(self, *args):
+        args = args + ("-execute\n",)
+
+        self.process = subprocess.Popen(
+                [self.executable, "-stay_open", "True",  "-@", "-"],
+                universal_newlines=True,
+                stdin=subprocess.PIPE, stdout=subprocess.PIPE)
+        self.process.stdin.write(str.join("\n", args))
+        self.process.stdin.flush()
+        output = ""
+        fd = self.process.stdout.fileno()
+        while not output.endswith(self.sentinel):
+            output += os.read(fd, 4096).decode('utf-8')
+        return output[:-len(self.sentinel)]
+
+    def get_metadata(self, *filenames):
+        return json.loads(self.execute("-G", "-j", "-n", *filenames))
+
+
 print("Enter the folder in which all jpg and mf4 files need to be checked. If you only press enter, current working directory will be used.")
 basepath = input()
 if basepath == "":
@@ -50,12 +92,9 @@ else:
 
     for index, file in tqdm(files[files["file_type"]=="mp4"].iterrows(), total=files[files["file_type"]=="mp4"].shape[0]):
         try:
-            with createParser(file.path) as parser:
-                metadata = extractMetadata(parser)
-                for line in metadata.exportPlaintext():
-                    if "- Creation date: " in line:
-                        print(line.split("- Creation date: ")[1])
-                        files["timestamp_metadata"].iloc[index] = datetime.strptime(line.split("- Creation date: ")[1], "%Y-%m-%d %H:%M:%S")
+            with ExifTool() as e:
+                metadata = e.get_metadata(file.path)
+                parse(metadata[0]["File:FileModifyDate"]).replace(tzinfo=None)
         except Exception as error:
             print("Error occured:", str(file.path), str(error))
             files["timestamp_metadata"].iloc[index] = files["timestamp_filename"].iloc[index]
@@ -74,7 +113,6 @@ else:
         for index, file in tqdm(files[files["rename"]==True].iterrows(), total=files[files["rename"]==True].shape[0]):
             files["new_name"].iloc[index] = f"{file.prefix}_{file.timestamp_metadata.strftime('%Y%m%d_%H%M%S')}.{file.file_type}"
             files["new_path"].iloc[index] = f"{os.path.join(files['new_basepath'].iloc[index], files['new_name'].iloc[index])}"
-
 
         for index, file in tqdm(files[files["rename"]==True].iterrows(), total=files[files["rename"]==True].shape[0]):
             suffix = 1
