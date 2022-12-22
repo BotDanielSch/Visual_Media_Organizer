@@ -94,7 +94,7 @@ else:
         try:
             with ExifTool() as e:
                 metadata = e.get_metadata(file.path)
-                parse(metadata[0]["File:FileModifyDate"]).replace(tzinfo=None)
+                files["timestamp_metadata"].iloc[index] = parse(metadata[0]["File:FileModifyDate"]).replace(tzinfo=None)
         except Exception as error:
             print("Error occured:", str(file.path), str(error))
             files["timestamp_metadata"].iloc[index] = files["timestamp_filename"].iloc[index]
