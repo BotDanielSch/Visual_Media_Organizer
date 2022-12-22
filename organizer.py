@@ -4,7 +4,7 @@ import pandas as pd
 import time
 from pathlib import Path
 
-print("Enter the folder in which all jpg and mf4 files need to be checked. If you only press enter, current working directory will be used.")
+print("Enter the folder in which you want to organize all jpg and mp4 files. If you only press enter, current working directory will be used.")
 basepath = input()
 if basepath == "":
     basepath = os.getcwd()
