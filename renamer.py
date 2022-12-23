@@ -6,13 +6,8 @@ import time
 import pandas as pd
 from tqdm import tqdm
 from pathlib import Path
-from hachoir.parser import createParser
-from hachoir.metadata import extractMetadata
-
 import subprocess
-import os
 import json
-from datetime import datetime
 from dateutil.parser import parse
 
 class ExifTool(object):
