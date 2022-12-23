@@ -10,11 +10,17 @@ import subprocess
 import json
 from dateutil.parser import parse
 
+print("Enter the folder in which all jpg and mf4 files need to be checked. If you only press enter, current working directory will be used.")
+basepath = input()
+if basepath == "":
+    basepath = os.getcwd()
+print(f"Chosen base path: {basepath}")
+
 class ExifTool(object):
 
     sentinel = "{ready}\r\n"
 
-    def __init__(self, executable=r"exiftool.exe"):
+    def __init__(self, executable=os.path.join(os.getcwd(), 'exiftool.exe')):
         self.executable = executable
 
     def __enter__(self):
@@ -44,13 +50,6 @@ class ExifTool(object):
 
     def get_metadata(self, *filenames):
         return json.loads(self.execute("-G", "-j", "-n", *filenames))
-
-
-print("Enter the folder in which all jpg and mf4 files need to be checked. If you only press enter, current working directory will be used.")
-basepath = input()
-if basepath == "":
-    basepath = os.getcwd()
-print(f"Chosen base path: {basepath}")
 
 file_types = ["jpg", "mp4"]
 
