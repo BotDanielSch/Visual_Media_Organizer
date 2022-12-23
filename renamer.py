@@ -71,9 +71,15 @@ else:
 
     files["basepath"] = [os.path.dirname(file) for file in files["path"]]
 
-    files["file_name"] = files.path.str.split("\\").str[-1] 
+    files["file_name"] = files.path.str.split("\\").str[-1]
     files["file_type"] = files.file_name.str.split(".", expand=True)[1]
     files["prefix"] = files.file_name.str.split("_", expand=True)[0]
+
+    files["suffix"] = None
+    for index, file in tqdm(files.iterrows(), total=files.shape[0]):
+        if "BURST" in file.file_name:
+            files["suffix"].iloc[index] = file.file_name.split("_")[-1].split(".")[0]
+
     files["timestamp_filename"] = files.file_name.str.split("_", expand=True)[1] + files.file_name.str.split("_", expand=True)[2].str.split(".", expand=True)[0]
     files["timestamp_filename"] = pd.to_datetime(files["timestamp_filename"], format='%Y%m%d%H%M%S')
 
@@ -111,7 +117,10 @@ else:
         files["new_name"] = files["file_name"].copy()
 
         for index, file in tqdm(files[files["rename"]==True].iterrows(), total=files[files["rename"]==True].shape[0]):
-            files["new_name"].iloc[index] = f"{file.prefix}_{file.timestamp_metadata.strftime('%Y%m%d_%H%M%S')}.{file.file_type}"
+            if files["suffix"].iloc[index]:
+                files["new_name"].iloc[index] = f"{file.prefix}_{file.timestamp_metadata.strftime('%Y%m%d_%H%M%S')}_{files['suffix'].iloc[index]}.{file.file_type}"
+            else:
+                files["new_name"].iloc[index] = f"{file.prefix}_{file.timestamp_metadata.strftime('%Y%m%d_%H%M%S')}.{file.file_type}"
             files["new_path"].iloc[index] = f"{os.path.join(files['new_basepath'].iloc[index], files['new_name'].iloc[index])}"
 
         for index, file in tqdm(files[files["rename"]==True].iterrows(), total=files[files["rename"]==True].shape[0]):
