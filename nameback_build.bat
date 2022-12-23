@@ -1,0 +1,1 @@
+pyinstaller --noconfirm --onefile --console --add-data "C:/Users/Daniel/AppData/Local/Programs/Python/Python39/Lib/os.py;." --add-data "C:/Users/Daniel/AppData/Local/Programs/Python/Python39/Lib/site-packages/tqdm;tqdm/" --add-data "C:/Users/Daniel/AppData/Local/Programs/Python/Python39/Lib/site-packages/pandas;pandas/" "nameback.py"
