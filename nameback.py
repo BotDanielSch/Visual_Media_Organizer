@@ -2,7 +2,7 @@ import pandas as pd
 import os
 from tqdm import tqdm
 
-files = pd.read_csv("Renamed_Files_Info.csv", sep=";", decimal=",", index=False)
+files = pd.read_csv("Renamed_Files_Info.csv", sep=";", decimal=",")
 
 for index, file in tqdm(files.iterrows(), total=files.shape[0]):
     try:
