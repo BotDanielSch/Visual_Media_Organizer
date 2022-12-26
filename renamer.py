@@ -8,7 +8,6 @@ from tqdm import tqdm
 from pathlib import Path
 import subprocess
 import json
-from dateutil.parser import parse
 
 print("Enter the folder in which all jpg and mf4 files need to be checked. If you only press enter, current working directory will be used.")
 basepath = input()
@@ -94,7 +93,7 @@ else:
         try:
             with ExifTool() as e:
                 metadata = e.get_metadata(file.path)
-                files["timestamp_metadata"].iloc[index] = parse(metadata[0]["File:FileModifyDate"]).replace(tzinfo=None)
+                files["timestamp_metadata"].iloc[index] = datetime.strptime(metadata[0]["File:FileModifyDate"], "%Y:%m:%d %H:%M:%S%z").replace(tzinfo=None)
         except Exception as error:
             print("Error occured:", str(file.path), str(error))
             files["timestamp_metadata"].iloc[index] = files["timestamp_filename"].iloc[index]
